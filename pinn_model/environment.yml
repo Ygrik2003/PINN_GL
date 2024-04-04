@@ -1,0 +1,10 @@
+name: pinn-env
+
+dependencies:
+  - python=3.9
+  - scipy
+  - matplotlib
+  - seaborn
+  - notebook
+  - pandas
+  - numpy

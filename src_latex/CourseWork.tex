@@ -1,0 +1,88 @@
+\chapter{First}
+
+Дана цилиндрическая емкость с гибким дном. 
+Дно колебается по закону 
+$z = A cos(\frac{\pi r}{2R}) sin(2\pi\nu t)$,
+где $A$ -- амплитуда колебаний, $r$ -- удаление 
+точки от центра сечения цилиндра, $R$ -- радиус 
+цилиндра, $\mu$ -- частота колебаний, $t$ -- время.
+Промоделировать волны на поверхности воды.
+
+Решение: \\
+Нормаль к нижней части запишется как:
+$$
+    \vec{n} = 
+    \left\{ 
+            2A \text{sin}\left( \frac{\pi r_0}{2R} \right)\text{sin}\left( 2\pi \nu t \right), \\
+            0, \\
+            \frac{\pi}{R}
+    \right\}        
+$$
+Берем уравнение Навье-Стокса 
+\begin{equation}
+    \rho \left[\frac{\partial{\vec{v}}}{\partial{t}}+\left(\vec{v}\cdot\vec{\nabla}\right)\vec{v}\right] = 
+    -\text{grad}p + \eta \Delta\vec{v} + (\zeta + \frac{\eta}{3})\text{grad}\text{div}\vec{v}
+\end{equation}
+Будем считать жидкость несжимаемой, тогда:
+\begin{equation}
+    \text{div}\vec{v} = 0
+\end{equation}
+\begin{equation}
+    \frac{\partial{\vec{v}}}{\partial{t}}+\left(\vec{v}\cdot\vec{\nabla}\right)\vec{v} = 
+    \frac{-\text{grad}p}{\rho} + \frac{\eta}{\rho} \Delta\vec{v}
+\end{equation}
+Перепишем данное уравнение в цилиндрической системе:
+\begin{equation}
+    \begin{cases}
+        x = r cos(\varphi) \\
+        y = r sin(\varphi) \\
+        z = z 
+    \end{cases}
+\end{equation}
+\begin{equation}
+    \begin{cases}
+        \frac{\partial{v_r}}{\partial t} + \left(\vec{v}\cdot\vec{\nabla}\right)v_r - \frac{v_\varphi^2}{r} = -\frac{1}{R} \frac{\partial p}{\partial r} + \nu \left( \Delta v_r - \frac{v_r}{r^2} - \frac{2}{r^2} \frac{\partial v_\varphi}{\partial \varphi} \right) \\
+        \frac{\partial{v_\varphi}}{\partial t} + \left(\vec{v}\cdot\vec{\nabla}\right)v_\varphi - \frac{v_\varphi v_r}{r} = -\frac{1}{Rr} \frac{\partial p}{\partial \varphi} + \nu \left( \Delta v_\varphi - \frac{v_\varphi}{r^2} + \frac{2}{r^2} \frac{\partial v_r}{\partial \varphi} \right) \\
+        \frac{\partial{v_z}}{\partial t} + \left(\vec{v}\cdot\vec{\nabla}\right)v_z = -\frac{1}{R} \frac{\partial p}{\partial z} + \nu\Delta v_z \\
+        \left( \vec{v} \cdot\vec{\nabla} \right)f = v_r\frac{\partial f}{\partial r} + \frac{v_\varphi}{r}\frac{\partial f}{\partial \varphi} + v_z \frac{\partial f}{\partial z} \\
+        \Delta f = \frac{1}{r}\frac{\partial}{\partial r}\left( r\frac{\partial f}{\partial r} \right) + \frac{1}{r^2}\frac{\partial^2 f}{\partial \varphi^2} + \frac{\partial^2 f}{\partial z^2}
+    \end{cases}
+\end{equation}
+В данной задаче есть центральная симметрия, движение потенциально, а значит:
+\begin{equation}
+    \begin{cases}
+        v_\varphi = 0 \\
+        \vec{v} = \vec{v}\left( r, z \right)
+    \end{cases}
+\end{equation}
+Итого получаем:
+\begin{equation}
+    \begin{cases}
+        \frac{\partial{v_r}}{\partial t} + v_r \frac{\partial v_r}{\partial r} + v_z \frac{\partial v_r}{\partial z} = -\frac{1}{R} \frac{\partial p}{\partial r} + \nu \left( \frac{1}{r}\frac{\partial}{\partial r}\left( r\frac{\partial v_r}{\partial r} \right) + \frac{\partial^2 v_r}{\partial z^2} - \frac{v_r}{r^2} \right) \\
+        \frac{\partial{v_z}}{\partial t} + v_r \frac{\partial v_z}{\partial r} + v_z \frac{\partial v_z}{\partial z} = -\frac{1}{R} \frac{\partial p}{\partial z} + \nu\left( \frac{1}{r}\frac{\partial}{\partial r}\left( r\frac{\partial v_z}{\partial r} \right) + \frac{\partial^2 v_z}{\partial z^2} \right) \\
+        \frac{1}{r}\frac{\partial \left( r v_r \right)}{\partial r} + \frac{\partial v_z}{\partial z} = 0
+    \end{cases}
+\end{equation}
+И граничные условия:
+\begin{equation}
+    \begin{cases}
+        \vec{v}\left( R, z \right) = \vec{0} \\
+        \vec{v}\left( r, 0 \right) = \left\{\frac{A^2 \pi^2 \nu}{4R}sin\left( \frac{\pi r}{R} \right)sin\left( 4\pi \nu t\right), 0, 2A\pi\nu cos\left( \frac{\pi r}{2R} \right)cos\left( 2\pi \nu t\right) \right\}
+    \end{cases}
+\end{equation}
+На поверхности:
+\begin{equation}
+    \begin{cases}
+        \sigma_{ij} = \eta \left( \frac{\partial v_i}{\partial x_j} + \frac{\partial v_j}{\partial x_i} \right) \\
+        p + \sigma_{zz} = p_{\text{газа}} \\
+        \vec{v}_{\text{газа}} \cdot \vec{n} = \vec{v}_{\text{жидкости}} \cdot \vec{n}
+    \end{cases}
+\end{equation}
+Пусть раздел двух сред будет на высоте h, высота всей емкости H, тогда задача сводится к двум системам: \\
+Для $ 0 \le z < h $
+\begin{equation}
+    \begin{cases}
+        
+    \end{cases}
+\end{equation}
+Для $ h < z \le H $
