@@ -1,2 +1,0 @@
-\babel@toc {russian}{}\relax 
-\contentsline {chapter}{\chapternumberline {1}First}{3}{chapter.1}%
