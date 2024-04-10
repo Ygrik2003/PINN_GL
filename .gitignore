@@ -1,3 +1,5 @@
+.build
+
 # Visual Studio local properties
 .vs
 .vscode
@@ -41,3 +43,4 @@ google-services.json
 
 # Android Profiling
 *.hprof
+
