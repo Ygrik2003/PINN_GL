@@ -16,6 +16,9 @@
 \usepackage[english, russian]{babel}                % Настройки для русского языка как основного в тексте
 \babelfont{rm}{Times New Roman}                     % TMR в качестве базового roman-щрифта
 
+% !TeX TXS-program:compile = --shell-escape
+% \usepackage{minted} % Programming language syntax highlight
+
 %%% Задаем стиль заголовков и подзаголовков в тексте %%%
 
 \setsecnumdepth{subsection} % Номера разделов считать до третьего уровня включительно, т.е. нумеруются только главы, секции, подсекции
@@ -142,7 +145,7 @@ doi=false,                                          % Не отображать 
 isbn=false,                                         % Не показывать ISBN, ISSN, ISRN
 ]{biblatex}[2016/09/17]
 \DeclareDelimFormat{bibinitdelim}{}                 % Убираем пробел между инициалами (Иванов И.И. вместо Иванов И. И.)
-\addbibresource{biba.bib}                           % Определяем файл с библиографией
+\addbibresource{literature.bib}                     % Определяем файл с библиографией
 
 %%% Скрипт, который автоматически подбирает язык (и, следовательно, формат) для каждой библиографической записи %%%
 %%% Если в названии работы есть кириллица - меняем значение поля langid на russian %%%
@@ -186,6 +189,8 @@ isbn=false,                                         % Не показывать 
 
 \newpage
 
+\input{introdution}
+\input{goals_and_objectives}
 \input{CourseWork}
 
 \printbibliography[title=Список использованных источников] % Автособираемый список литературы
