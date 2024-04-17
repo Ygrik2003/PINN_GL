@@ -17,7 +17,7 @@
 \babelfont{rm}{Times New Roman}                     % TMR в качестве базового roman-щрифта
 
 % !TeX TXS-program:compile = --shell-escape
-% \usepackage{minted} % Programming language syntax highlight
+\usepackage[outputdir=.build]{minted} % Programming language syntax highlight
 
 %%% Задаем стиль заголовков и подзаголовков в тексте %%%
 
@@ -48,6 +48,7 @@
 \renewcommand*{\cftchapterdotsep}{\cftdotsep} % Делаем точки до номера страницы после названий глав
 \renewcommand*{\cftdotsep}{1} % Задаем расстояние между точками
 \renewcommand*{\cftchapterleader}{\cftdotfill{\cftchapterdotsep}} % Делаем точки стандартной формы (по умолчанию они "жирные")
+\renewcommand*{\baselinestretch}{1.5} % Межстрочный интервал 
 \maxtocdepth{subsection} % В оглавление попадают только разделы первыхтрех уровней: главы, секции и подсекции
 
 %%% Выравнивание и переносы %%%
@@ -190,7 +191,7 @@ isbn=false,                                         % Не показывать 
 \newpage
 
 \input{introdution}
-\input{goals_and_objectives}
+% \input{goals_and_objectives}
 \input{CourseWork}
 
 \printbibliography[title=Список использованных источников] % Автособираемый список литературы
