@@ -171,8 +171,8 @@ model.compile("adam", lr=1e-3, loss_weights=[1, 1, 1, 1, 100, 100, 100, 100, 100
 # model.train(iterations=30000, display_every=1)
 model.compile("L-BFGS", loss_weights=[1, 1, 1, 1, 100, 100, 100, 100, 100, 100])
 # losshistory, train_state = model.train()
-# model.restore("pinn_model/model/good_model.ckpt-43904.ckpt", verbose=1)
-losshistory, train_state = model.train(model_restore_path="pinn_model/model/good_model.ckpt-43904.ckpt")
+model.restore("pinn_model/model/good_model.ckpt-43904.ckpt", verbose=1)
+# losshistory, train_state = model.train(model_restore_path="pinn_model/model/good_model.ckpt-43904.ckpt")
 
 
 x, y, z = np.meshgrid(
@@ -243,7 +243,6 @@ ax = fig.add_subplot(111, projection='3d')
 ax.set_title('Solution of Navier-Stokes Equations')
 ax.set_xlabel('X')
 ax.set_ylabel('Y')
-ax.set_zlabel('Z')
 
 X, Y, Z = np.meshgrid(np.linspace(-1, 1, 10), np.linspace(-1, 1, 10), np.linspace(-1, 1, 10))
 
@@ -266,7 +265,6 @@ ax = fig.add_subplot(111, projection='3d')
 ax.set_title('Solution of Navier-Stokes Equations')
 ax.set_xlabel('X')
 ax.set_ylabel('Y')
-ax.set_zlabel('Z')
 ax.quiver(X, Y, Z, u_pred_1, v_pred_1, w_pred_1, length=0.1, normalize=True, color='r')
 ax.set_title('Solution at t = 1')
 plt.show()
