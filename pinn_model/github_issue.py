@@ -168,9 +168,12 @@ net = dde.nn.FNN([4] + 4 * [50] + [4], "tanh", "Glorot normal")
 model = dde.Model(data, net)
 
 model.compile("adam", lr=1e-3, loss_weights=[1, 1, 1, 1, 100, 100, 100, 100, 100, 100])
-model.train(iterations=30000, display_every=1)
+# model.train(iterations=30000, display_every=1)
 model.compile("L-BFGS", loss_weights=[1, 1, 1, 1, 100, 100, 100, 100, 100, 100])
-losshistory, train_state = model.train()
+# losshistory, train_state = model.train()
+# model.restore("pinn_model/model/good_model.ckpt-43904.ckpt", verbose=1)
+losshistory, train_state = model.train(model_restore_path="pinn_model/model/good_model.ckpt-43904.ckpt")
+
 
 x, y, z = np.meshgrid(
     np.linspace(-1, 1, 10), np.linspace(-1, 1, 10), np.linspace(-1, 1, 10)

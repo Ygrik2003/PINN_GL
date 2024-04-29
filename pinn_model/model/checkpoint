@@ -1,0 +1,2 @@
+model_checkpoint_path: "good_model.ckpt-43910.ckpt"
+all_model_checkpoint_paths: "good_model.ckpt-43910.ckpt"
