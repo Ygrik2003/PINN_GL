@@ -16,9 +16,6 @@
 \usepackage[english, russian]{babel}                % Настройки для русского языка как основного в тексте
 \babelfont{rm}{Times New Roman}                     % TMR в качестве базового roman-щрифта
 
-% !TeX TXS-program:compile = --shell-escape
-\usepackage[outputdir=.build]{minted} % Programming language syntax highlight
-
 %%% Задаем стиль заголовков и подзаголовков в тексте %%%
 
 \setsecnumdepth{subsection} % Номера разделов считать до третьего уровня включительно, т.е. нумеруются только главы, секции, подсекции
@@ -176,6 +173,10 @@ isbn=false,                                         % Не показывать 
 \usepackage[version=4]{mhchem}                      % Красивые химические уравнения
 \usepackage{amsmath}                                % Усовершенствование отображения математических выражений 
 
+
+% !TeX TXS-program:compile = --shell-escape
+\usepackage[outputdir=.build]{minted} % Programming language syntax highlight
+
 %%% Вставляем по очереди все содержательные части документа %%%
 
 \begin{document}
@@ -191,7 +192,6 @@ isbn=false,                                         % Не показывать 
 \newpage
 
 \input{introdution}
-% \input{goals_and_objectives}
 \input{CourseWork}
 
 \printbibliography[title=Список использованных источников] % Автособираемый список литературы

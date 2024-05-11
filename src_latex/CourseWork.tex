@@ -1,116 +1,69 @@
-\chapter{Библиотека DeepXDE}
+\chapter{Обзор библиотеки DeepXDE \cite{lu2021deepxde}}
 
-Для решения поставленной задачи с помощью DeepXDE необходимо:
-\begin{enumerate}
-    \item Задать область задачи
-    \begin{minted}
-        [
-            fontsize=\footnotesize,
-            linenos
-        ]
-        {python}
-        import DeepXDE as dde
+DeepXDE (Deep Learning for Differential Equations) –-- это открытая библиотека для Python,
+предназначенная для решения различных типов дифференциальных уравнений с помощью методов
+глубокого обучения. Она была разработана группой исследователей из Научно-технического
+университета Китая и представлена в 2019 году. DeepXDE позволяет решать задачи, описываемые
+обыкновенными и частными дифференциальными уравнениями, включая уравнения в частных производных,
+интегро-дифференциальные уравнения и уравнения с переменными коэффициентами.
 
-        space_domain = dde.geometry.Rectangle([x_min, y_min], [x_max, y_max])
-        time_domain = dde.geometry.TimeDomain(0, t_max)
-        domain = dde.geometry.GeometryXTime(space_domain, time_domain) 
-    \end{minted}
-    \item Задать уравнение (систему уравнений)
-    \begin{minted}
-        [
-            fontsize=\footnotesize,
-            linenos
-        ]
-        {python}
-        def pde(x, y):
-            """
-            INPUTS:
-                x: x[:,0] is x-coordinate
-                x[:,1] is y-coordinate
-                x[:,2] is t-coordinate
-                y: Network output, in this case:
-                    y[:,0] is u(x, y, t) the speed for x component
-                    y[:,1] is v(x, y, t) the speed for y component
-                    y[:,2] is p(x, y, t) the pressure
-            OUTPUT:
-                The pde in standard form i.e. something that must be zero
-            """
-            u, v, p = y[:,0], y[:, 1], y[:, 2]
-            du_t = dde.grad.jacobian(y, x, i=0, j=2)
-            dv_t = dde.grad.jacobian(y, x, i=1, j=2)
-            du_x = dde.grad.jacobian(y, x, i=0, j=0)
-            dv_x = dde.grad.jacobian(y, x, i=1, j=0)
-            du_y = dde.grad.jacobian(y, x, i=0, j=1)
-            dv_y = dde.grad.jacobian(y, x, i=1, j=1)
-            dp_x = dde.grad.jacobian(y, x, i=2, j=0)
-            dp_y = dde.grad.jacobian(y, x, i=2, j=1)
-            d2u_x2 = dde.grad.hessian(y, x, component=0, i=0, j=0)
-            d2v_x2 = dde.grad.hessian(y, x, component=1, i=0, j=0)
-            d2u_y2 = dde.grad.hessian(y, x, component=0, i=1, j=1)
-            d2v_y2 = dde.grad.hessian(y, x, component=1, i=1, j=1)
+Данная библиотека поддерживает следущие крупные библиотеки машинного обучения: tensorflow.compat.v1,
+tensorflow, pytorch, jax, paddle.
 
-            f_u = du_t + u * du_x + v * du_y + 1 / rpho * dp_x - mu * (d2u_x2 + d2u_y2)
-            f_v = dv_t + u * dv_x + v * dv_y + 1 / rpho * dp_y - mu * (d2v_x2 + d2v_y2)
-            f_continuity = du_x + dv_y
-            return [f_u, f_v, f_continuity]
-    \end{minted}
-    \item Задать начальные условия
-    \begin{minted}
-        [
-            fontsize=\footnotesize,
-            linenos
-        ]
-        {python}
-        ic_u = dde.icbc.IC(domain, lambda x: np.array([A] * len(x)), lambda _, on_initial: on_initial, component=0)
-        ic_v = dde.icbc.IC(domain, lambda x: np.array([A] * len(x)), lambda _, on_initial: on_initial, component=1)
-    \end{minted}
-    \item Задать граничные условия
-    \begin{minted}
-        [
-            fontsize=\footnotesize,
-            linenos
-        ]
-        {python}
-        bc_u_0 = dde.icbc.DirichletBC(domain, lambda x: 0, lambda _, on_boundary: on_boundary, component=0)
-        bc_v_0 = dde.icbc.DirichletBC(domain, lambda x: 0, lambda _, on_boundary: on_boundary, component=1)
-    \end{minted}
-    \item Создать модель
-    \begin{minted}
-        [
-            fontsize=\footnotesize,
-            linenos
-        ]
-        {python}
-        data = dde.data.TimePDE(domain, pde, [bc_u_0, bc_u_0, ic_u, ic_v],
-                         num_domain=x_points * y_points,
-                         num_boundary=2*(x_points+y_points),
-                         num_initial=x_points*y_points,
-                         train_distribution="pseudo",
-        )
+\section{Возможности библиотеки}
+Для постановки физической задачи необходимо четко определить, что рассматривается в качестве системы
+(тело, частица, сплошная среда и т.д.), а также ее границы и взаимодействие с окружающей средой.
+Следует задать начальное состояние системы, такое как начальное положение, скорость, температура,
+давление и т.д. Необходимо определить, какие физические законы и принципы применимы к данной системе
+(законы Ньютона, законы сохранения, принципы термодинамики и т.д.), и записать уравнения, описывающие
+движение, взаимодействие или другие процессы в системе, на основе выбранных законов и принципов. При
+необходимости нужно задать дополнительные условия, такие как связи, граничные условия, свойства
+материалов и т.д. Также следует четко сформулировать, какие физические величины необходимо определить
+в результате решения задачи. Этот минимум информации позволяет корректно сформулировать физическую
+задачу и создать математическую модель для ее решения.
 
-        net = dde.nn.FNN([3] + [16] * 4 + [3], "tanh", "Glorot normal")
-        model = dde.Model(data, net)
+\subsection{Область}
+Библиотека DeepXDE имеет ряд стандартных областей (geometry), которые можно применить к большинству задач.
+В общей сложности имеется 3 базовых класса:
+\begin{minted}{python}
+deepxde.geometry.geometry_1d
+deepxde.geometry.geometry_2d
+deepxde.geometry.geometry_3d
+\end{minted}
+от которых унаследованны такие области, как
+\begin{minted}{python}
+deepxde.geometry.rectangle
+deepxde.geometry.circle
+deepxde.geometry.ellipse
+подправить
+\end{minted}
+Помимо пространственных координат, можно вводить временную координату, для этого используем
+\begin{minted}{python}
+    deepxde.geometry.TimeDomain
     \end{minted}
-    \item Обучить модель
-    \begin{minted}
-        [
-            fontsize=\footnotesize,
-            linenos
-        ]
-        {python}
-        model.compile("adam", lr=1e-3, loss="MSE")
-        model.train(iterations=100, display_every=10)
-    \end{minted}
-    \item Применить модель
-    \begin{minted}
-        [
-            fontsize=\footnotesize,
-            linenos
-        ]
-        {python}
-        prediction = model.predict(xyt_domain, operator=None)
-    \end{minted}
-\end{enumerate}
+\subsection{Уравнения}
+
+\subsection{Граничные условия}
+
+\subsection{Начальные условия}
+
+\subsection{Создание модели}
+
+\subsection{Обучение модели}
+
+\subsection{Применение модели}
+
+\subsection{Визуализация решения}
+
+
+\chapter{Использование NPU телефона для ускорения работы модели \cite{nnapi}}
+
+С точки зрения возможности использования NPU следует выбирать tensorflow или tensorflow.compat.v1,
+так как они поддерживают экспорт модели в TensorFlow Lite и их использование на устройствах Android
+и iOS. Такой подход можно использовать для реалистичного моделирования физики как в научных целях, так и
+в мобильных играх.
+
+Для реализации приложения с такими возм
 
 % \chapter{First}
 
