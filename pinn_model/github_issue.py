@@ -2,8 +2,10 @@
 import deepxde as dde
 import numpy as np
 
+
+dde.backend.set_default_backend("tensorflow.compat.v1")
+
 import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D
 
 a = 1
 d = 1
@@ -175,96 +177,105 @@ model.restore("pinn_model/model/good_model.ckpt-43904.ckpt", verbose=1)
 # losshistory, train_state = model.train(model_restore_path="pinn_model/model/good_model.ckpt-43904.ckpt")
 
 
-x, y, z = np.meshgrid(
-    np.linspace(-1, 1, 10), np.linspace(-1, 1, 10), np.linspace(-1, 1, 10)
-)
+# x, y, z = np.meshgrid(
+#     np.linspace(-1, 1, 10), np.linspace(-1, 1, 10), np.linspace(-1, 1, 10)
+# )
 
+# X = np.vstack((np.ravel(x), np.ravel(y), np.ravel(z))).T
+
+# t_0 = np.zeros(1000).reshape(1000, 1)
+# t_1 = np.ones(1000).reshape(1000, 1)
+
+# X_0 = np.hstack((X, t_0))
+
+# output_0 = model.predict(X_0)
+
+# u_pred_0 = output_0[:, 0].reshape(-1)
+# v_pred_0 = output_0[:, 1].reshape(-1)
+# w_pred_0 = output_0[:, 2].reshape(-1)
+# p_pred_0 = output_0[:, 3].reshape(-1)
+
+# u_exact_0 = u_func(X_0).reshape(-1)
+# v_exact_0 = v_func(X_0).reshape(-1)
+# w_exact_0 = w_func(X_0).reshape(-1)
+# p_exact_0 = p_func(X_0).reshape(-1)
+
+# f_0 = model.predict(X_0, operator=pde)
+
+# l2_difference_u_0 = dde.metrics.l2_relative_error(u_exact_0, u_pred_0)
+# l2_difference_v_0 = dde.metrics.l2_relative_error(v_exact_0, v_pred_0)
+# l2_difference_w_0 = dde.metrics.l2_relative_error(w_exact_0, w_pred_0)
+# l2_difference_p_0 = dde.metrics.l2_relative_error(p_exact_0, p_pred_0)
+# residual_0 = np.mean(np.absolute(f_0))
+
+# print("Accuracy at t = 0:")
+# print("Mean residual:", residual_0)
+# print("L2 relative error in u:", l2_difference_u_0)
+# print("L2 relative error in v:", l2_difference_v_0)
+# print("L2 relative error in w:", l2_difference_w_0)
+
+# # Визуализация решения
+# fig = plt.figure(figsize=(12, 8))
+# ax = fig.add_subplot(111, projection='3d')
+# ax.set_title('Solution of Navier-Stokes Equations')
+# ax.set_xlabel('X')
+# ax.set_ylabel('Y')
+
+# X, Y, Z = np.meshgrid(np.linspace(-1, 1, 10), np.linspace(-1, 1, 10), np.linspace(-1, 1, 10))
+
+# u_pred_0 = output_0[:, 0].reshape(X.shape)
+# v_pred_0 = output_0[:, 1].reshape(X.shape)
+# w_pred_0 = output_0[:, 2].reshape(X.shape)
+
+# # Визуализация решения для t = 0
+# ax.quiver(X, Y, Z, u_pred_0, v_pred_0, w_pred_0, length=0.1, normalize=True, color='r')
+# ax.set_title('Solution at t = 0')
+# plt.show()
+
+import matplotlib.pyplot as plt
+import numpy as np
+from matplotlib.animation import FuncAnimation
+
+# Assuming you have defined model, u_func, v_func, w_func, p_func, and pde 
+
+fig = plt.figure()
+ax = fig.add_subplot(111, projection='3d')
+
+# Set up meshgrid
+x, y, z = np.meshgrid(np.linspace(-1, 1, 10), np.linspace(-1, 1, 10), np.linspace(-1, 1, 10))
 X = np.vstack((np.ravel(x), np.ravel(y), np.ravel(z))).T
 
-t_0 = np.zeros(1000).reshape(1000, 1)
-t_1 = np.ones(1000).reshape(1000, 1)
+# Time parameters
+t_values = np.linspace(0, 1, 60)  # 60 frames for the animation
 
-X_0 = np.hstack((X, t_0))
-X_1 = np.hstack((X, t_1))
+# Initialize quiver plot
+quiver = ax.quiver(X[:, 0], X[:, 1], X[:, 2], np.zeros(X.shape[0]), np.zeros(X.shape[0]), np.zeros(X.shape[0]), length=0.1, normalize=True, color='r')
 
-output_0 = model.predict(X_0)
-output_1 = model.predict(X_1)
+# Function to update the plot for each frame
+def update(frame):
+    t = t_values[frame]
+    t_array = np.full((1000, 1), t)
+    X_t = np.hstack((X, t_array))
 
-u_pred_0 = output_0[:, 0].reshape(-1)
-v_pred_0 = output_0[:, 1].reshape(-1)
-w_pred_0 = output_0[:, 2].reshape(-1)
-p_pred_0 = output_0[:, 3].reshape(-1)
+    output = model.predict(X_t)
+    u_pred = output[:, 0].reshape(x.shape)
+    v_pred = output[:, 1].reshape(x.shape)
+    w_pred = output[:, 2].reshape(x.shape)
 
-u_exact_0 = u_func(X_0).reshape(-1)
-v_exact_0 = v_func(X_0).reshape(-1)
-w_exact_0 = w_func(X_0).reshape(-1)
-p_exact_0 = p_func(X_0).reshape(-1)
+    # Update quiver data
+    quiver.set_UVC(u_pred, v_pred, w_pred)
 
-u_pred_1 = output_1[:, 0].reshape(-1)
-v_pred_1 = output_1[:, 1].reshape(-1)
-w_pred_1 = output_1[:, 2].reshape(-1)
-p_pred_1 = output_1[:, 3].reshape(-1)
+    # Update title
+    ax.set_title(f'Solution at t = {t:.2f}')
 
-u_exact_1 = u_func(X_1).reshape(-1)
-v_exact_1 = v_func(X_1).reshape(-1)
-w_exact_1 = w_func(X_1).reshape(-1)
-p_exact_1 = p_func(X_1).reshape(-1)
+    return quiver,
 
-f_0 = model.predict(X_0, operator=pde)
-f_1 = model.predict(X_1, operator=pde)
+# Create the animation
+ani = FuncAnimation(fig, update, frames=len(t_values), blit=False, interval=50)
 
-l2_difference_u_0 = dde.metrics.l2_relative_error(u_exact_0, u_pred_0)
-l2_difference_v_0 = dde.metrics.l2_relative_error(v_exact_0, v_pred_0)
-l2_difference_w_0 = dde.metrics.l2_relative_error(w_exact_0, w_pred_0)
-l2_difference_p_0 = dde.metrics.l2_relative_error(p_exact_0, p_pred_0)
-residual_0 = np.mean(np.absolute(f_0))
-
-l2_difference_u_1 = dde.metrics.l2_relative_error(u_exact_1, u_pred_1)
-l2_difference_v_1 = dde.metrics.l2_relative_error(v_exact_1, v_pred_1)
-l2_difference_w_1 = dde.metrics.l2_relative_error(w_exact_1, w_pred_1)
-l2_difference_p_1 = dde.metrics.l2_relative_error(p_exact_1, p_pred_1)
-residual_1 = np.mean(np.absolute(f_1))
-
-print("Accuracy at t = 0:")
-print("Mean residual:", residual_0)
-print("L2 relative error in u:", l2_difference_u_0)
-print("L2 relative error in v:", l2_difference_v_0)
-print("L2 relative error in w:", l2_difference_w_0)
-print("\n")
-print("Accuracy at t = 1:")
-print("Mean residual:", residual_1)
-print("L2 relative error in u:", l2_difference_u_1)
-print("L2 relative error in v:", l2_difference_v_1)
-print("L2 relative error in w:", l2_difference_w_1)
-
-# Визуализация решения
-fig = plt.figure(figsize=(12, 8))
-ax = fig.add_subplot(111, projection='3d')
-ax.set_title('Solution of Navier-Stokes Equations')
+# Set plot labels and title
 ax.set_xlabel('X')
 ax.set_ylabel('Y')
-
-X, Y, Z = np.meshgrid(np.linspace(-1, 1, 10), np.linspace(-1, 1, 10), np.linspace(-1, 1, 10))
-
-u_pred_0 = output_0[:, 0].reshape(X.shape)
-v_pred_0 = output_0[:, 1].reshape(X.shape)
-w_pred_0 = output_0[:, 2].reshape(X.shape)
-
-u_pred_1 = output_1[:, 0].reshape(X.shape)
-v_pred_1 = output_1[:, 1].reshape(X.shape)
-w_pred_1 = output_1[:, 2].reshape(X.shape)
-
-# Визуализация решения для t = 0
-ax.quiver(X, Y, Z, u_pred_0, v_pred_0, w_pred_0, length=0.1, normalize=True, color='r')
-ax.set_title('Solution at t = 0')
-plt.show()
-
-# Визуализация решения для t = 1
-fig = plt.figure(figsize=(12, 8))
-ax = fig.add_subplot(111, projection='3d')
 ax.set_title('Solution of Navier-Stokes Equations')
-ax.set_xlabel('X')
-ax.set_ylabel('Y')
-ax.quiver(X, Y, Z, u_pred_1, v_pred_1, w_pred_1, length=0.1, normalize=True, color='r')
-ax.set_title('Solution at t = 1')
+
 plt.show()
