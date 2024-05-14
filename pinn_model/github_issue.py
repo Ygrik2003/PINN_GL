@@ -432,7 +432,7 @@ mean_runtimes = [statistics.mean(runtime) for runtime in runtimes]
 std_dev = [statistics.stdev(runtime) for runtime in runtimes]
 
 plt.figure()
-plt.errorbar(np.array(params) ** 3, mean_runtimes, yerr=std_dev, fmt='o', capsize=2)
+plt.errorbar(np.array(params) ** 3, mean_runtimes, yerr=std_dev, fmt='o', capsize=8)
 plt.xlabel("Количество точек")
 plt.ylabel("Время выполнения (сек)")
 plt.title("Время выполнения модели в зависимости от количества точек")
