@@ -372,30 +372,67 @@ from matplotlib.animation import FuncAnimation
 # plt.show()
 
 
+# import time
+
+# steps = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100]
+# result = []
+# for step in steps:
+#     x, y, z = np.meshgrid(np.linspace(-1, 1, step), np.linspace(-1, 1, step), np.linspace(-1, 1, step))
+#     X = np.vstack((np.ravel(x), np.ravel(y), np.ravel(z))).T
+
+#     # Time parameters
+#     t_values = np.linspace(0, 1, 60)  # 60 frames for the animation
+
+
+#     start = time.time()
+#     shape = X.shape[0]
+
+#     for t in t_values:
+
+#         t_array = np.full((shape, 1), t)
+#         X_t = np.hstack((X, t_array))
+
+#         output = model.predict(X_t)
+
+#     result.append(time.time() - start)
+#     print(result[-1])
+
+# plt.plot(np.array([result, steps]).reshape(-1, 2))
+# plt.show()
+
 import time
+import statistics
+import matplotlib.pyplot as plt
 
-steps = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100]
-result = []
-for step in steps:
-    x, y, z = np.meshgrid(np.linspace(-1, 1, step), np.linspace(-1, 1, step), np.linspace(-1, 1, step))
+def calculate_model(X, t):
+    t_array = np.full((X.shape[0], 1), t)
+    X_t = np.hstack((X, t_array))
+    model.predict(X_t)
+
+t = 60
+n_try = 10
+
+params = [  
+    10, 20, 30, 40, 50, 60, 70, 80, 90, 100
+]
+
+runtimes = []
+for param, k in params, range(len(params)):
+    x, y, z = np.meshgrid(np.linspace(-1, 1, param), np.linspace(-1, 1, param), np.linspace(-1, 1, param))
     X = np.vstack((np.ravel(x), np.ravel(y), np.ravel(z))).T
+    runtimes.append([])
+    for i in range(n_try):
+        start_time = time.time()
+        calculate_model(X, t)
+        end_time = time.time()
+        runtimes[k].append(end_time - start_time)
 
-    # Time parameters
-    t_values = np.linspace(0, 1, 60)  # 60 frames for the animation
+mean_runtime = statistics.mean(runtimes)
+std_dev = statistics.stdev(runtimes)
 
-
-    start = time.time()
-    shape = X.shape[0]
-
-    for t in t_values:
-
-        t_array = np.full((shape, 1), t)
-        X_t = np.hstack((X, t_array))
-
-        output = model.predict(X_t)
-
-    result.append(time.time() - start)
-    print(result[-1])
-
-plt.plot(np.array([result, steps]).reshape(-1, 2))
+plt.figure()
+plt.bar(params, runtimes, yerr=std_dev)
+plt.xlabel("Параметры")
+plt.ylabel("Время выполнения (сек)")
+plt.title("Время выполнения модели в зависимости от параметров")
 plt.show()
