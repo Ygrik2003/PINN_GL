@@ -173,8 +173,8 @@ model.compile("adam", lr=1e-3, loss_weights=[1, 1, 1, 1, 100, 100, 100, 100, 100
 # model.train(iterations=30000, display_every=1)
 model.compile("L-BFGS", loss_weights=[1, 1, 1, 1, 100, 100, 100, 100, 100, 100])
 # losshistory, train_state = model.train()
-model.restore("pinn_model/model/good_model.ckpt-43904.ckpt", verbose=1)
-# losshistory, train_state = model.train(model_restore_path="pinn_model/model/good_model.ckpt-43904.ckpt")
+model.restore("model/good_model.ckpt-43904.ckpt", verbose=1)
+# losshistory, train_state = model.train(iterations=1, model_restore_path="model/good_model.ckpt-43904.ckpt")
 
 
 # x, y, z = np.meshgrid(
@@ -238,44 +238,164 @@ from matplotlib.animation import FuncAnimation
 
 # Assuming you have defined model, u_func, v_func, w_func, p_func, and pde 
 
-fig = plt.figure()
-ax = fig.add_subplot(111, projection='3d')
+# fig = plt.figure()
+# ax : plt.Axes = fig.add_subplot(111, projection='3d')
 
-# Set up meshgrid
-x, y, z = np.meshgrid(np.linspace(-1, 1, 10), np.linspace(-1, 1, 10), np.linspace(-1, 1, 10))
-X = np.vstack((np.ravel(x), np.ravel(y), np.ravel(z))).T
+# # Set up meshgrid
+# x, y, z = np.meshgrid(np.linspace(-1, 1, 100), np.linspace(-1, 1, 100), np.linspace(-1, 1, 100))
+# X = np.vstack((np.ravel(x), np.ravel(y), np.ravel(z))).T
 
-# Time parameters
-t_values = np.linspace(0, 1, 60)  # 60 frames for the animation
+# # Time parameters
+# t_values = np.linspace(0, 1, 60)  # 60 frames for the animation
 
-# Initialize quiver plot
-quiver = ax.quiver(X[:, 0], X[:, 1], X[:, 2], np.zeros(X.shape[0]), np.zeros(X.shape[0]), np.zeros(X.shape[0]), length=0.1, normalize=True, color='r')
+# # Initialize quiver plot
+# quiver = ax.quiver(x, y, z, np.zeros(x.shape), np.zeros(x.shape), np.zeros(x.shape), length=0.1, normalize=True, color='r')
 
-# Function to update the plot for each frame
-def update(frame):
-    t = t_values[frame]
-    t_array = np.full((1000, 1), t)
-    X_t = np.hstack((X, t_array))
+# # Set plot labels and title
+# ax.set_xlabel('X')
+# ax.set_ylabel('Y')
+# ax.set_title('Solution of Navier-Stokes Equations')
 
-    output = model.predict(X_t)
-    u_pred = output[:, 0].reshape(x.shape)
-    v_pred = output[:, 1].reshape(x.shape)
-    w_pred = output[:, 2].reshape(x.shape)
+# # Function to update the plot for each frame
+# def update(frame):
+#     t = t_values[frame]
+#     t_array = np.full((1000, 1), t)
+#     X_t = np.hstack((X, t_array))
 
-    # Update quiver data
-    quiver.set_UVC(u_pred, v_pred, w_pred)
+#     output = model.predict(X_t)
+#     u_pred = output[:, 0].reshape(x.shape)
+#     v_pred = output[:, 1].reshape(y.shape)
+#     w_pred = output[:, 2].reshape(z.shape)
 
-    # Update title
-    ax.set_title(f'Solution at t = {t:.2f}')
+#     # Update quiver data
+#     new_segs = [[[x_, y_, z_], [u, v, w]] for x_, y_, z_, u, v, w in 
+#                  zip(x, y, z, u_pred, v_pred, w_pred)]
+#     print(np.array(new_segs).shape)
+#     quiver.set_segments(new_segs)
 
-    return quiver,
+#     # Update title
+#     ax.set_title(f'Solution at t = {t:.2f}')
+#     print(t)
+#     return quiver,
 
-# Create the animation
-ani = FuncAnimation(fig, update, frames=len(t_values), blit=False, interval=50)
+# # Create the animation
+# ani = FuncAnimation(fig, update, frames=len(t_values), blit=False, interval=50)
+# ani.save("cube_model.gif", writer="imagemagick", fps=10)
 
-# Set plot labels and title
-ax.set_xlabel('X')
-ax.set_ylabel('Y')
-ax.set_title('Solution of Navier-Stokes Equations')
 
+# Assuming x, y, z are 1D arrays representing coordinates
+# If they are meshgrids, flatten them:
+# x = x.flatten()
+# y = y.flatten()
+# z = z.flatten()
+
+# # Initialize quiver plot
+# quiver = ax.quiver(x, y, z, np.zeros(x.size), np.zeros(y.size), np.zeros(z.size), length=0.1, normalize=True, color='r')
+
+# ax.set_xlabel('X')
+# ax.set_ylabel('Y')
+# ax.set_title('Solution of Navier-Stokes Equations')
+
+# def update(frame):
+#     t = t_values[frame]
+#     t_array = np.full((1000, 1), t)
+#     X_t = np.hstack((X, t_array))
+
+#     output = model.predict(X_t)
+#     u_pred = output[:, 0].reshape(x.size)  # Use x.size
+#     v_pred = output[:, 1].reshape(y.size)  # Use y.size
+#     w_pred = output[:, 2].reshape(z.size)  # Use z.size
+
+#     # Update quiver data (optimized)
+#     scale = 0.1
+#     new_segs = [[[xi, yi, zi], [xi + scale * ui, yi + scale * vi, zi + scale * wi]] for xi, yi, zi, ui, vi, wi in zip(x, y, z, u_pred, v_pred, w_pred)]
+
+#     quiver.set_segments(new_segs)
+#     ax.set_title(f'Solution at t = {t:.2f}')
+
+#     return quiver,
+
+# ani = FuncAnimation(fig, update, frames=len(t_values), blit=False, interval=50)
+# ani.save("cube_model.gif", writer="imagemagick", fps=10)
+
+# plt.show()
+
+
+
+
+# # Create the figure and 2D axes
+# fig = plt.figure()
+# ax = fig.add_subplot(111)
+
+
+# x, y, z = np.meshgrid(np.linspace(-1, 1, 10), np.linspace(-1, 1, 10), np.linspace(-1, 1, 10))
+# X = np.vstack((np.ravel(x), np.ravel(y), np.ravel(z))).T
+
+# # Find indices where Z is closest to 0.5
+# z_target = 0.5
+# z_indices = np.argmin(np.abs(z - z_target))
+
+# x2, y2 = np.meshgrid(np.linspace(-1, 1, 10), np.linspace(-1, 1, 10))
+
+# # Initialize quiver plot
+# quiver = ax.quiver(x2, y2, np.zeros(x2.shape), np.zeros(y2.shape), color='r')
+
+# ax.set_xlabel('X')
+# ax.set_ylabel('Y')
+# ax.set_title('Solution of Navier-Stokes Equations at Z = 0.5')
+
+# def update(frame):
+#     t = t_values[frame]
+#     t_array = np.full((1000, 1), t)
+#     X_t = np.hstack((X, t_array))
+
+#     output = model.predict(X_t)
+#     u_pred = output[:, 0].reshape(x.shape)
+#     v_pred = output[:, 1].reshape(y.shape)
+
+#     # Extract u and v at Z = 0.5
+#     u_2d = u_pred[z_indices, :, :]
+#     v_2d = v_pred[z_indices, :, :]
+
+#     # Update quiver data
+#     quiver.set_UVC(u_2d, v_2d)
+#     ax.set_title(f'Solution at t = {t:.2f} (Z = 0.5)')
+
+#     return quiver,
+
+# ani = FuncAnimation(fig, update, frames=len(t_values), blit=False, interval=50)
+# ani.save("2d_quiver_z05.gif", writer="imagemagick", fps=10)
+
+# plt.show()
+
+# dde.utils.plot_loss_history(losshistory)
+# plt.show()
+
+
+import time
+
+steps = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100]
+result = []
+for step in steps:
+    x, y, z = np.meshgrid(np.linspace(-1, 1, step), np.linspace(-1, 1, step), np.linspace(-1, 1, step))
+    X = np.vstack((np.ravel(x), np.ravel(y), np.ravel(z))).T
+
+    # Time parameters
+    t_values = np.linspace(0, 1, 60)  # 60 frames for the animation
+
+
+    start = time.time()
+    shape = X.shape[0]
+
+    for t in t_values:
+
+        t_array = np.full((shape, 1), t)
+        X_t = np.hstack((X, t_array))
+
+        output = model.predict(X_t)
+
+    result.append(time.time() - start)
+    print(result[-1])
+
+plt.plot(np.array([result, steps]).reshape(-1, 2))
 plt.show()
