@@ -413,7 +413,7 @@ t = 60
 n_try = 10
 
 params = [  
-    10, 20, 30, 40, 50, 60, 70, 80, 90, 100
+    10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 130, 140, 150
 ]
 
 runtimes = []
@@ -426,13 +426,14 @@ for k in range(len(params)):
         calculate_model(X, t)
         end_time = time.time()
         runtimes[k].append(end_time - start_time)
+    print(params[k])
 
-mean_runtime = statistics.mean(runtimes)
-std_dev = statistics.stdev(runtimes)
+mean_runtimes = [statistics.mean(runtime) for runtime in runtimes]
+std_dev = [statistics.stdev(runtime) for runtime in runtimes]
 
 plt.figure()
-plt.bar(params, runtimes, yerr=std_dev)
-plt.xlabel("Параметры")
+plt.errorbar(np.array(params) ** 3, mean_runtimes, yerr=std_dev, fmt='o', capsize=2)
+plt.xlabel("Количество точек")
 plt.ylabel("Время выполнения (сек)")
-plt.title("Время выполнения модели в зависимости от параметров")
+plt.title("Время выполнения модели в зависимости от количества точек")
 plt.show()
