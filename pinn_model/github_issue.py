@@ -417,8 +417,8 @@ params = [
 ]
 
 runtimes = []
-for param, k in params, range(len(params)):
-    x, y, z = np.meshgrid(np.linspace(-1, 1, param), np.linspace(-1, 1, param), np.linspace(-1, 1, param))
+for k in range(len(params)):
+    x, y, z = np.meshgrid(np.linspace(-1, 1, params[k]), np.linspace(-1, 1, params[k]), np.linspace(-1, 1, params[k]))
     X = np.vstack((np.ravel(x), np.ravel(y), np.ravel(z))).T
     runtimes.append([])
     for i in range(n_try):
