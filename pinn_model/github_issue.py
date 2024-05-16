@@ -409,8 +409,8 @@ def calculate_model(X, t):
     X_t = np.hstack((X, t_array))
     model.predict(X_t)
 
-t = 60
-n_try = 10
+t = 0.5
+n_try = 100
 
 params = [  
     10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 130, 140, 150
@@ -432,8 +432,10 @@ mean_runtimes = [statistics.mean(runtime) for runtime in runtimes]
 std_dev = [statistics.stdev(runtime) for runtime in runtimes]
 
 plt.figure()
-plt.errorbar(np.array(params) ** 3, mean_runtimes, yerr=std_dev, fmt='o', capsize=8)
+plt.errorbar(np.array(params) ** 3, mean_runtimes, yerr=std_dev, fmt='o', capsize=4)
 plt.xlabel("Количество точек")
 plt.ylabel("Время выполнения (сек)")
+plt.xscale('log')
+plt.yscale('log')
 plt.title("Время выполнения модели в зависимости от количества точек")
 plt.show()
