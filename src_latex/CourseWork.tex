@@ -22,134 +22,225 @@ tensorflow, pytorch, jax, paddle.
 в результате решения задачи. Этот минимум информации позволяет корректно сформулировать физическую
 задачу и создать математическую модель для ее решения.
 
+Суть метода заключается в использовании невязки всех уравнений, граничных и начальных условий в качестве
+функции потерь. Это позволяет нейронной сети минимизировать данную ошибку и получить необходимый результат.
+
+Невязка - это разница между левым и правым значениями уравнений. Она рассчитывается на основе начального решения,
+которое задается случайным образом. Затем, с помощью методов минимизации функции потерь, решение уточняется.
+
+Аналогичный метод решения мы можем видеть при численном решении системы линейных алгебраических уравнений (СЛАУ)
+с помощью градиентного спуска. В этом случае, невязка также используется в качестве функции потерь, но минимизирует
+ее Градиентный спуск, чтобы получить решение СЛАУ.
+
+Градиентный спуск - это один из наиболее распространенных методов минимизации функции потерь. Он заключается в том,
+что на каждом шаге алгоритма мы изменяем решение в направлении, которое уменьшает значение функции потерь.
+
 \subsection{Область}
-Библиотека DeepXDE имеет ряд стандартных областей (geometry), которые можно применить к большинству задач.
-В общей сложности имеется 3 базовых класса:
+Библиотека DeepXDE имеет ряд стандартных областей (geometry), которые можно применить к большинству задач:
 \begin{minted}{python}
-deepxde.geometry.geometry_1d
-deepxde.geometry.geometry_2d
-deepxde.geometry.geometry_3d
+from deepxde.geometry.geometry_1d import Interval
+from deepxde.geometry.geometry_2d import (
+    Disk, Ellipse, Polygon, Rectangle, StarShaped, Triangle
+)
+from deepxde.geometry.geometry_3d import Cuboid, Sphere
+from deepxde.geometry.geometry_nd import Hypercube, Hypersphere
+from deepxde.geometry.timedomain  import GeometryXTime, TimeDomain
 \end{minted}
-от которых унаследованны такие области, как
+Объекты данных классов имеют следущий функционал (весь функционал унаследован от интерфейсного класса deepxde.geometry.Geometry):
+\begin{itemize}
+    \item Проверить, принадлежит ли точка данной области или ее границе
+    \item Нормаль к границе.
+    \item Объединение, пересечение и интерсекцию с другими обдостями.
+    \item Получить набор случайных точек в данной области или на ее границе.
+\end{itemize}
+Эти возможности предоставляют полный доступ к созданию и использованию области для решения
+дифференциальных уравнений.
+
+Например для рассмотрения обтекания бесконечного цилиндра нам потребуется следущая область:
 \begin{minted}{python}
-deepxde.geometry.rectangle
-deepxde.geometry.circle
-deepxde.geometry.ellipse
-подправить
+base_domain = Rectangle(xmin=[0, 0], xmax=[3, 1])
+barrier_domain = Ellipse(
+    center=[0.5, 0.5], semimajor=0.1, semiminor=0.1
+    )
+space_domain = base_domain - barrier_domain
+
+time_domain = dde.geometry.TimeDomain(0, 1)
+
+domain = dde.geometry.GeometryXTime(space_domain, time_domain)
 \end{minted}
-Помимо пространственных координат, можно вводить временную координату, для этого используем
-\begin{minted}{python}
-    deepxde.geometry.TimeDomain
-    \end{minted}
+Далее мы будем использовать данную область для примера решенния задачи.
 \subsection{Уравнения}
+Для задания уравнения или системы уравнений мы можем использовать следущие два оператора:
+\begin{minted}{python}
+deepxde.grad.jacobian
+deepxde.grad.hessian
+\end{minted}
+Они представляют собой операторы набла и Лапласа соответственно. Для использования уравнений
+в дальнейшем необходимо создать функцию, которая будет возвращать уравнение или массив уравнений.
 
-\subsection{Граничные условия}
+Для задач гидродинамики воспользуемся уравнения Навье-Стокса. Пример реализации уравнений
+для двумерной задачи:
+\begin{minted}{python}
+def navier_stocks(x, u):
+    u_vel, v_vel, p = u[:, 0:1], u[:, 1:2], u[:, 2:3]
 
-\subsection{Начальные условия}
+    u_vel_x = dde.grad.jacobian(u, x, i=0, j=0)
+    u_vel_y = dde.grad.jacobian(u, x, i=0, j=1)
+    u_vel_t = dde.grad.jacobian(u, x, i=0, j=2)
+    u_vel_xx = dde.grad.hessian(u, x, component=0, i=0, j=0)
+    u_vel_yy = dde.grad.hessian(u, x, component=0, i=1, j=1)
 
+    v_vel_x = dde.grad.jacobian(u, x, i=1, j=0)
+    v_vel_y = dde.grad.jacobian(u, x, i=1, j=1)
+    v_vel_t = dde.grad.jacobian(u, x, i=1, j=2)
+    v_vel_xx = dde.grad.hessian(u, x, component=1, i=0, j=0)
+    v_vel_yy = dde.grad.hessian(u, x, component=1, i=1, j=1)
+
+    p_x = dde.grad.jacobian(u, x, i=2, j=0)
+    p_y = dde.grad.jacobian(u, x, i=2, j=1)
+
+    momentum_x = (
+        u_vel_t
+        + (u_vel * u_vel_x + v_vel * u_vel_y)
+        + p_x
+        - 1 / Re * (u_vel_xx + u_vel_yy)
+    )
+    momentum_y = (
+        v_vel_t
+        + (u_vel * v_vel_x + v_vel * v_vel_y)
+        + p_y
+        - 1 / Re * (v_vel_xx + v_vel_yy)
+    )
+    continuity = u_vel_x + v_vel_y
+    return [momentum_x, momentum_y, continuity]
+\end{minted}
+
+\subsection{Граничные и начальные условия}
+Для задания граничных условий используются следущие классы в DeepXDE (подпространство deepxde\.icbc):
+\begin{itemize}
+\item DirichletBC
+\item NeumannBC
+\item OperatorBC
+\item RobinBC
+\item PeriodicBC
+\item PointSetBC
+\item PointSetOperatorBC
+\end{itemize}
+
+Каждый из них задает соответствующее условие, а также позволяет унаследовать и изменить условия
+для определения границы с помощью вспомогательного аргумента.
+
+Для начальных условий из того же подпространства есть класс IC, который задает значение нашего решения в начальный
+момент времени и также, как и граничные условия, может переопределять условия для границы.
+
+Пример реализации условий для уравнения Навье-Стокса в двумерной задаче:
+\begin{minted}{python}
+boundary_condition_u = dde.DirichletBC(
+    domain, lambda x: 1, 
+    lambda x, on_boundary: base_domain.on_boundary(x[0:2]),
+    component=0
+)
+boundary_condition_v = dde.DirichletBC(
+    domain, lambda x: 0, 
+    lambda x, on_boundary: base_domain.on_boundary(x[0:2]),
+    component=1
+)
+barrier_condition_u = dde.DirichletBC(
+    domain, lambda x: 0, 
+    lambda x, on_boundary: barrier_domain.on_boundary(x[0:2]),
+    component=0
+)
+barrier_condition_v = dde.DirichletBC(
+    domain, lambda x: 0, 
+    lambda x, on_boundary: barrier_domain.on_boundary(x[0:2]),
+    component=1
+)
+
+initial_condition_u = dde.IC(
+    domain, lambda x: 0,
+    lambda x, on_initial: on_initial,
+    component=0
+)
+initial_condition_v = dde.IC(
+    domain, lambda x: 0,
+    lambda x, on_initial: on_initial, 
+    component=1
+)
+\end{minted}
+    
 \subsection{Создание модели}
+Пример:
+\begin{minted}{python}
+data = dde.data.TimePDE(
+    domain,
+    navier_stocks,
+    [
+        boundary_condition_u,
+        boundary_condition_v,
+        initial_condition_u,
+        initial_condition_v,
+        barrier_condition_u,
+        barrier_condition_v,
+    ],
+    num_domain=50000,
+    num_boundary=5000,
+    num_initial=5000,
+    num_test=10000,
+)
 
+net = dde.nn.FNN([3] + 4 * [50] + [3], "tanh", "Glorot normal")
+
+model = dde.Model(data, net)    
+\end{minted}
 \subsection{Обучение модели}
+Пример:
+\begin{minted}{python}
+model.compile("adam", lr=1e-3, loss_weights=[1, 1, 100, 10, 10, 10, 10, 10, 10])
+model.train(iterations=3000, display_every=1)
+model.compile("L-BFGS", loss_weights=[1, 1, 100, 10, 10, 10, 10, 10, 10])
+losshistory, train_state = model.train()
+\end{minted}
+Также имеется возможность сохранять и загружать существующую модель:
+\begin{minted}{python}
+model.train(iterations=3000, display_every=1, model_save_path="model/")
 
+model.restore("model/good_model.ckpt-43904.ckpt", verbose=1)    
+\end{minted}
 \subsection{Применение модели}
+Для создания модели требуется четкое понимание функции ошибки и оптимизаторов, способных минимизировать данную функцию.
+Так как мы не можем гарантированно знать нашу функцию ошибки, остается только эксперементировать с различными
+оптимизаторами.
 
-\subsection{Визуализация решения}
+В данной библиотеке доступны все оптимизаторы из соответствующей оболочки для нейронных сетей. В данной работе преимущественно
+используется Tensorflow, поэтому доступны следущие оптимизаторы
+
+\begin{itemize}
+    \item Adadelta
+    \item Adafactor
+    \item Adagrad
+    \item Adam
+    \item AdamW
+    \item Adamax
+    \item Ftrl
+    \item Lion
+    \item Nadam
+    \item RMSprop
+    \item SGD
+\end{itemize}
+А также L-BFGS и L-BFGS-B предоставляемые самой библиотекой DeepXDE.
+Для остальных доступных оболочек соответствующие им оптимизаторы можно найти тут tensorflow.compat.v1 \cite{tfv1opt},
+tensorflow \cite{tfopt}, pytorch \cite{pytorchopt}, jax \cite{jaxopt}, paddle \cite{paddleopt}.
+
+Далее нужно оценить весовые коэффициенты для каждого из входных условий. Например, в последущих примерах я отдаю предпочтение
+выполнению граничных условий, поэтому они идут с весом 100, и уравнение непрерывности с весом 10, остальное 1.
 
 
-\chapter{Использование NPU телефона для ускорения работы модели \cite{nnapi}}
+
+\chapter{Использование NPU для ускорения работы модели}
 
 С точки зрения возможности использования NPU следует выбирать tensorflow или tensorflow.compat.v1,
 так как они поддерживают экспорт модели в TensorFlow Lite и их использование на устройствах Android
-и iOS. Такой подход можно использовать для реалистичного моделирования физики как в научных целях, так и
+и iOS\cite{nnapi}. Такой подход можно использовать для реалистичного моделирования физики как в научных целях, так и
 в мобильных играх.
 
 Для реализации приложения с такими возм
-
-% \chapter{First}
-
-% Дана цилиндрическая емкость с гибким дном. 
-% Дно колебается по закону 
-% $z = A cos(\frac{\pi r}{2R}) sin(2\pi\nu t)$,
-% где $A$ -- амплитуда колебаний, $r$ -- удаление 
-% точки от центра сечения цилиндра, $R$ -- радиус 
-% цилиндра, $\mu$ -- частота колебаний, $t$ -- время.
-% Промоделировать волны на поверхности воды.
-
-% Решение: \\
-% Нормаль к нижней части запишется как:
-% $$
-%     \vec{n} = 
-%     \left\{ 
-%             2A \text{sin}\left( \frac{\pi r_0}{2R} \right)\text{sin}\left( 2\pi \nu t \right), \\
-%             0, \\
-%             \frac{\pi}{R}
-%     \right\}        
-% $$
-% Берем уравнение Навье-Стокса 
-% \begin{equation}
-%     \rho \left[\frac{\partial{\vec{v}}}{\partial{t}}+\left(\vec{v}\cdot\vec{\nabla}\right)\vec{v}\right] = 
-%     -\text{grad}p + \eta \Delta\vec{v} + (\zeta + \frac{\eta}{3})\text{grad}\text{div}\vec{v}
-% \end{equation}
-% Будем считать жидкость несжимаемой, тогда:
-% \begin{equation}
-%     \text{div}\vec{v} = 0
-% \end{equation}
-% \begin{equation}
-%     \frac{\partial{\vec{v}}}{\partial{t}}+\left(\vec{v}\cdot\vec{\nabla}\right)\vec{v} = 
-%     \frac{-\text{grad}p}{\rho} + \frac{\eta}{\rho} \Delta\vec{v}
-% \end{equation}
-% Перепишем данное уравнение в цилиндрической системе:
-% \begin{equation}
-%     \begin{cases}
-%         x = r cos(\varphi) \\
-%         y = r sin(\varphi) \\
-%         z = z 
-%     \end{cases}
-% \end{equation}
-% \begin{equation}
-%     \begin{cases}
-%         \frac{\partial{v_r}}{\partial t} + \left(\vec{v}\cdot\vec{\nabla}\right)v_r - \frac{v_\varphi^2}{r} = -\frac{1}{R} \frac{\partial p}{\partial r} + \nu \left( \Delta v_r - \frac{v_r}{r^2} - \frac{2}{r^2} \frac{\partial v_\varphi}{\partial \varphi} \right) \\
-%         \frac{\partial{v_\varphi}}{\partial t} + \left(\vec{v}\cdot\vec{\nabla}\right)v_\varphi - \frac{v_\varphi v_r}{r} = -\frac{1}{Rr} \frac{\partial p}{\partial \varphi} + \nu \left( \Delta v_\varphi - \frac{v_\varphi}{r^2} + \frac{2}{r^2} \frac{\partial v_r}{\partial \varphi} \right) \\
-%         \frac{\partial{v_z}}{\partial t} + \left(\vec{v}\cdot\vec{\nabla}\right)v_z = -\frac{1}{R} \frac{\partial p}{\partial z} + \nu\Delta v_z \\
-%         \left( \vec{v} \cdot\vec{\nabla} \right)f = v_r\frac{\partial f}{\partial r} + \frac{v_\varphi}{r}\frac{\partial f}{\partial \varphi} + v_z \frac{\partial f}{\partial z} \\
-%         \Delta f = \frac{1}{r}\frac{\partial}{\partial r}\left( r\frac{\partial f}{\partial r} \right) + \frac{1}{r^2}\frac{\partial^2 f}{\partial \varphi^2} + \frac{\partial^2 f}{\partial z^2}
-%     \end{cases}
-% \end{equation}
-% В данной задаче есть центральная симметрия, движение потенциально, а значит:
-% \begin{equation}
-%     \begin{cases}
-%         v_\varphi = 0 \\
-%         \vec{v} = \vec{v}\left( r, z \right)
-%     \end{cases}
-% \end{equation}
-% Итого получаем:
-% \begin{equation}
-%     \begin{cases}
-%         \frac{\partial{v_r}}{\partial t} + v_r \frac{\partial v_r}{\partial r} + v_z \frac{\partial v_r}{\partial z} = -\frac{1}{R} \frac{\partial p}{\partial r} + \nu \left( \frac{1}{r}\frac{\partial}{\partial r}\left( r\frac{\partial v_r}{\partial r} \right) + \frac{\partial^2 v_r}{\partial z^2} - \frac{v_r}{r^2} \right) \\
-%         \frac{\partial{v_z}}{\partial t} + v_r \frac{\partial v_z}{\partial r} + v_z \frac{\partial v_z}{\partial z} = -\frac{1}{R} \frac{\partial p}{\partial z} + \nu\left( \frac{1}{r}\frac{\partial}{\partial r}\left( r\frac{\partial v_z}{\partial r} \right) + \frac{\partial^2 v_z}{\partial z^2} \right) \\
-%         \frac{1}{r}\frac{\partial \left( r v_r \right)}{\partial r} + \frac{\partial v_z}{\partial z} = 0
-%     \end{cases}
-% \end{equation}
-% И граничные условия:
-% \begin{equation}
-%     \begin{cases}
-%         \vec{v}\left( R, z \right) = \vec{0} \\
-%         \vec{v}\left( r, 0 \right) = \left\{\frac{A^2 \pi^2 \nu}{4R}sin\left( \frac{\pi r}{R} \right)sin\left( 4\pi \nu t\right), 0, 2A\pi\nu cos\left( \frac{\pi r}{2R} \right)cos\left( 2\pi \nu t\right) \right\}
-%     \end{cases}
-% \end{equation}
-% На поверхности:
-% \begin{equation}
-%     \begin{cases}
-%         \sigma_{ij} = \eta \left( \frac{\partial v_i}{\partial x_j} + \frac{\partial v_j}{\partial x_i} \right) \\
-%         p + \sigma_{zz} = p_{\text{газа}} \\
-%         \vec{v}_{\text{газа}} \cdot \vec{n} = \vec{v}_{\text{жидкости}} \cdot \vec{n}
-%     \end{cases}
-% \end{equation}
-% Пусть раздел двух сред будет на высоте h, высота всей емкости H, тогда задача сводится к двум системам: \\
-% Для $ 0 \le z < h $
-% \begin{equation}
-%     \begin{cases}
-        
-%     \end{cases}
-% \end{equation}
-% Для $ h < z \le H $
